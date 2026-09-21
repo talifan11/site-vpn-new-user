@@ -182,23 +182,39 @@ npm run preview
 
 ## Деплой
 
-### Vercel
+Подробная инструкция по публикации проекта находится в файле [DEPLOY.md](./DEPLOY.md).
+
+### Быстрый старт
+
+#### GitHub Pages (рекомендуется)
 
 ```bash
-npm install -g vercel
-vercel
+# 1. Создайте репозиторий на GitHub
+# 2. Загрузите проект
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/USERNAME/vps-vpn-guide.git
+git branch -M main
+git push -u origin main
+
+# 3. В Settings → Pages выберите "GitHub Actions"
+# 4. Сайт будет доступен через 2-3 минуты
 ```
 
-### Netlify
+#### Vercel (самый простой)
 
-1. Подключите репозиторий к Netlify
-2. Укажите команду сборки: `npm run build`
-3. Укажите папку публикации: `dist`
+1. Зайдите на https://vercel.com
+2. Войдите через GitHub
+3. Нажмите "Import Project" → выберите репозиторий
+4. Готово! Сайт задеплоится автоматически
 
-### Статический хостинг
+#### Netlify
 
-1. Выполните `npm run build`
-2. Загрузите содержимое папки `dist/` на хостинг
+1. Зайдите на https://netlify.com
+2. "Add new site" → "Import from Git"
+3. Build command: `npm run build`
+4. Publish directory: `dist`
 
 ## Лицензия
 
