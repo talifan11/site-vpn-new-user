@@ -1,25 +1,14 @@
-import { Link, useParams, Navigate, useSearchParams } from 'react-router-dom';
+import { Link, useParams, Navigate } from 'react-router-dom';
 import { threads, categories, getThread, getThreadsByCategory } from '../data/forum';
-import { MessageSquare, Clock, ArrowRight, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { MessageSquare, Clock, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
 
 export function Forum() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [activeTag, setActiveTag] = useState<string | null>(searchParams.get('tag'));
 
-  useEffect(() => {
-    const tagFromUrl = searchParams.get('tag');
-    if (tagFromUrl) {
-      setActiveTag(tagFromUrl);
-    }
-  }, [searchParams]);
-
-  const filteredThreads = threads.filter(thread => {
-    const categoryMatch = !activeCategory || thread.category === activeCategory;
-    const tagMatch = !activeTag || thread.tags.includes(activeTag);
-    return categoryMatch && tagMatch;
-  });
+  const filteredThreads = activeCategory
+    ? getThreadsByCategory(activeCategory)
+    : threads;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 fade-in-up">
@@ -29,7 +18,7 @@ export function Forum() {
       </p>
 
       {/* Categories */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-8">
         <button
           onClick={() => setActiveCategory(null)}
           className="text-xs px-3 py-1.5 rounded-full border transition-all hover:scale-105"
@@ -57,47 +46,6 @@ export function Forum() {
         ))}
       </div>
 
-      {/* Active Filters */}
-      {(activeCategory || activeTag) && (
-        <div className="flex items-center gap-2 mb-6 p-3 rounded-lg" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
-          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Активные фильтры:</span>
-          {activeCategory && (
-            <button
-              onClick={() => setActiveCategory(null)}
-              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-all hover:scale-105"
-              style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-accent)' }}
-            >
-              {activeCategory}
-              <X size={12} />
-            </button>
-          )}
-          {activeTag && (
-            <button
-              onClick={() => {
-                setActiveTag(null);
-                setSearchParams({});
-              }}
-              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-all hover:scale-105"
-              style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-accent)' }}
-            >
-              #{activeTag}
-              <X size={12} />
-            </button>
-          )}
-          <button
-            onClick={() => { 
-              setActiveCategory(null); 
-              setActiveTag(null);
-              setSearchParams({});
-            }}
-            className="text-xs ml-auto transition-all hover:scale-105"
-            style={{ color: 'var(--color-text-muted)' }}
-          >
-            Сбросить все
-          </button>
-        </div>
-      )}
-
       {/* Popular Tags */}
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-muted)' }}>
@@ -105,44 +53,23 @@ export function Forum() {
         </p>
         <div className="flex flex-wrap gap-2">
           {Array.from(new Set(threads.flatMap(t => t.tags))).slice(0, 12).map(tag => (
-            <button
+            <Link
               key={tag}
-              onClick={() => {
-                setActiveTag(tag);
-                setSearchParams({ tag });
-              }}
-              className="text-xs px-2 py-1 rounded-md transition-all hover:scale-105"
+              to={`/tags/${tag}`}
+              className="text-xs px-2 py-1 rounded-md transition-all hover:scale-105 badge"
               style={{ 
-                backgroundColor: activeTag === tag ? 'var(--color-accent)' : 'var(--color-bg-tertiary)',
-                color: activeTag === tag ? 'white' : 'var(--color-accent)'
+                backgroundColor: 'var(--color-bg-tertiary)',
+                color: 'var(--color-accent)'
               }}
             >
               #{tag}
-            </button>
+            </Link>
           ))}
         </div>
       </div>
 
       {/* Threads */}
       <div className="space-y-2">
-        {filteredThreads.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Нет тредов с выбранными фильтрами
-            </p>
-            <button
-              onClick={() => {
-                setActiveCategory(null);
-                setActiveTag(null);
-                setSearchParams({});
-              }}
-              className="text-sm mt-2 transition-all hover:scale-105"
-              style={{ color: 'var(--color-accent)' }}
-            >
-              Сбросить фильтры
-            </button>
-          </div>
-        )}
         {filteredThreads.map((thread, index) => (
           <Link
             key={thread.id}
@@ -167,22 +94,18 @@ export function Forum() {
                   </span>
                   <div className="flex gap-1.5 ml-auto flex-wrap justify-end">
                     {thread.tags.map(tag => (
-                      <button
+                      <Link
                         key={tag}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setActiveTag(tag);
-                          setSearchParams({ tag });
-                        }}
-                        className="text-xs px-2 py-0.5 rounded transition-all hover:scale-105"
+                        to={`/tags/${tag}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs px-2 py-0.5 rounded transition-all hover:scale-105 badge"
                         style={{ 
-                          backgroundColor: activeTag === tag ? 'var(--color-accent)' : 'var(--color-bg-tertiary)',
-                          color: activeTag === tag ? 'white' : 'var(--color-accent)'
+                          backgroundColor: 'var(--color-bg-tertiary)',
+                          color: 'var(--color-accent)'
                         }}
                       >
                         #{tag}
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -223,7 +146,7 @@ export function ForumThreadPage() {
           {thread.tags.map(tag => (
             <Link
               key={tag}
-              to={`/forum?tag=${tag}`}
+              to={`/tags/${tag}`}
               className="text-xs px-2 py-0.5 rounded badge transition-all hover:scale-105"
               style={{ 
                 backgroundColor: 'var(--color-bg-tertiary)',

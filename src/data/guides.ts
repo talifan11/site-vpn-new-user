@@ -13,6 +13,7 @@ export interface Guide {
   difficulty: string;
   time: string;
   os: string;
+  tags: string[];
   sections: GuideSection[];
   troubleshooting: { problem: string; solution: string }[];
 }
@@ -26,6 +27,7 @@ export const guides: Guide[] = [
     difficulty: 'Лёгкий',
     time: '5-10 минут',
     os: 'Ubuntu 20.04/22.04/24.04',
+    tags: ['auto-setup', 'wireguard', 'openvpn', 'скрипт', 'bash', 'автоматизация'],
     sections: [
       {
         id: 'quick-start',
@@ -655,6 +657,7 @@ echo "Готово. Оставлено последних 5 резервных �
     difficulty: 'Средний',
     time: '15-20 минут',
     os: 'Ubuntu 22.04',
+    tags: ['wireguard', 'wg-easy', 'docker', 'qr-код', 'udp', 'wg0'],
     sections: [
       {
         id: 'prerequisites',
@@ -787,6 +790,7 @@ EOF`,
     difficulty: 'Сложный',
     time: '30-40 минут',
     os: 'Ubuntu 22.04',
+    tags: ['ikev2', 'strongswan', 'letsencrypt', 'sslip', 'сертификаты', 'eap', 'ios', 'windows'],
     sections: [
       {
         id: 'prerequisites',
@@ -985,6 +989,7 @@ Android:
     difficulty: 'Лёгкий',
     time: '10-15 минут',
     os: 'Ubuntu 22.04',
+    tags: ['openvpn', 'tcp', '443', 'https', 'скрипт', 'ovpn', 'блокировки'],
     sections: [
       {
         id: 'why-tcp-443',

@@ -36,6 +36,25 @@ export function Guides() {
             </div>
             <h2 className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>{guide.title}</h2>
             <p className="text-sm mb-3" style={{ color: 'var(--color-text-secondary)' }}>{guide.description}</p>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {guide.tags.slice(0, 4).map(tag => (
+                <span
+                  key={tag}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.hash = `/tags/${tag}`;
+                  }}
+                  className="text-xs px-2 py-0.5 rounded cursor-pointer transition-all hover:scale-105 badge"
+                  style={{ 
+                    backgroundColor: 'var(--color-bg-tertiary)',
+                    color: 'var(--color-accent)'
+                  }}
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
             <span className="inline-flex items-center gap-1 text-sm github-link group" style={{ color: 'var(--color-accent)' }}>
               Читать гайд <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
             </span>

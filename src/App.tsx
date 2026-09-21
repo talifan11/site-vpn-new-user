@@ -6,6 +6,7 @@ import { Guides, GuideDetail } from './pages/Guides';
 import { Diagnostics } from './pages/Diagnostics';
 import { Forum, ForumThreadPage } from './pages/Forum';
 import { About } from './pages/About';
+import { TagPage } from './pages/TagPage';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/forum" element={<Forum />} />
           <Route path="/forum/:id" element={<ForumThreadPage />} />
+          <Route path="/tags/:tag" element={<TagPage />} />
           <Route path="/about" element={<About />} />
         </Route>
       </Routes>
