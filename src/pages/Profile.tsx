@@ -5,7 +5,9 @@ import { useForum } from '../contexts/ForumContext';
 import { 
   Settings, MessageSquare, FileText, Award, 
   Calendar, MapPin, LinkIcon, Github, Edit2, 
-  Save, X, LogOut, TrendingUp, CheckCircle2 
+  Save, X, LogOut, TrendingUp, CheckCircle2,
+  Heart, Bookmark, Share2, MoreHorizontal,
+  User as UserIcon, Briefcase, GraduationCap
 } from 'lucide-react';
 
 const roleLabels: Record<User['role'], string> = {
@@ -62,7 +64,7 @@ function ReputationBadge({ reputation, role }: { reputation: number; role: User[
 export function Profile() {
   const { user, isAuthenticated, logout, updateUser } = useAuth();
   const { getUserThreads, getUserReplies } = useForum();
-  const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'portfolio' | 'activity' | 'settings'>('portfolio');
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({
     displayName: user?.displayName || '',
@@ -82,8 +84,8 @@ export function Profile() {
   };
 
   const tabs = [
-    { id: 'overview', label: 'Обзор', icon: FileText },
-    { id: 'activity', label: 'Активность', icon: MessageSquare },
+    { id: 'portfolio', label: 'Портфолио', icon: Briefcase },
+    { id: 'activity', label: 'Стена активности', icon: MessageSquare },
     { id: 'settings', label: 'Настройки', icon: Settings }
   ];
 
@@ -93,14 +95,14 @@ export function Profile() {
       <div className="p-6 rounded-xl border mb-6" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}>
         <div className="flex items-start gap-4">
           <div 
-            className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shrink-0"
+            className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold shrink-0"
             style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
           >
             {user.avatar}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
                 {user.displayName}
               </h1>
               <span 
@@ -225,11 +227,20 @@ export function Profile() {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'overview' && (
+      {activeTab === 'portfolio' && (
         <div className="space-y-4">
           <ReputationBadge reputation={user.reputation} role={user.role} />
           
-          <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+          <div className="p-6 rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+            <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
+              Обо мне
+            </h3>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              {user.bio || 'Расскажите о себе в настройках профиля'}
+            </p>
+          </div>
+
+          <div className="p-6 rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
             <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
               Как заработать репутацию
             </h3>
@@ -252,6 +263,29 @@ export function Profile() {
               </li>
             </ul>
           </div>
+
+          <div className="p-6 rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+            <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
+              Мои навыки
+            </h3>
+            {user.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {user.skills.map(skill => (
+                  <span 
+                    key={skill}
+                    className="text-sm px-3 py-1 rounded-md badge"
+                    style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-accent)' }}
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                Добавьте навыки в настройках профиля
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -259,6 +293,7 @@ export function Profile() {
         <div className="space-y-4">
           {userThreads.length === 0 && userReplies.length === 0 ? (
             <div className="text-center py-12">
+              <MessageSquare size={48} className="mx-auto mb-4" style={{ color: 'var(--color-text-muted)' }} />
               <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
                 Пока нет активности
               </p>
@@ -267,7 +302,7 @@ export function Profile() {
                 className="text-sm github-link"
                 style={{ color: 'var(--color-accent)' }}
               >
-                Перейти на форум
+                Перейти на форум и начать общаться
               </Link>
             </div>
           ) : (
@@ -279,14 +314,17 @@ export function Profile() {
                   className="block p-4 rounded-lg border card-hover"
                   style={{ borderColor: 'var(--color-border)' }}
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-2">
                     <FileText size={14} style={{ color: 'var(--color-accent)' }} />
                     <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                       Создал тред · {thread.date}
                     </span>
                   </div>
-                  <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                     {thread.title}
+                  </p>
+                  <p className="text-xs line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
+                    {thread.content}
                   </p>
                 </Link>
               ))}
@@ -297,7 +335,7 @@ export function Profile() {
                   className="block p-4 rounded-lg border card-hover"
                   style={{ borderColor: 'var(--color-border)' }}
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-2">
                     <MessageSquare size={14} style={{ color: 'var(--color-accent)' }} />
                     <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                       Ответил в треде · {reply.date}

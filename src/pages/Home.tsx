@@ -25,6 +25,13 @@ export function Home() {
             <ArrowRight size={16} />
           </Link>
           <Link
+            to="/profile"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all hover:scale-105"
+            style={{ border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+          >
+            Личный кабинет
+          </Link>
+          <Link
             to="/guides"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all hover:scale-105"
             style={{ border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
