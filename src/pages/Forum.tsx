@@ -1,14 +1,17 @@
 import { Link, useParams, Navigate } from 'react-router-dom';
-import { threads, categories, getThread, getThreadsByCategory } from '../data/forum';
-import { MessageSquare, Clock, ArrowRight } from 'lucide-react';
+import { threads, categories, getThread as getThreadData } from '../data/forum';
+import { useForum } from '../contexts/ForumContext';
+import { useAuth } from '../contexts/AuthContext';
+import { MessageSquare, Clock, ArrowRight, ArrowBigUp, Send } from 'lucide-react';
 import { useState } from 'react';
 
 export function Forum() {
+  const { threads: allThreads } = useForum();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const filteredThreads = activeCategory
-    ? getThreadsByCategory(activeCategory)
-    : threads;
+    ? allThreads.filter(t => t.category === activeCategory)
+    : allThreads;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 fade-in-up">
@@ -52,7 +55,7 @@ export function Forum() {
           Популярные теги
         </p>
         <div className="flex flex-wrap gap-2">
-          {Array.from(new Set(threads.flatMap(t => t.tags))).slice(0, 12).map(tag => (
+          {Array.from(new Set(allThreads.flatMap(t => t.tags))).slice(0, 12).map(tag => (
             <Link
               key={tag}
               to={`/tags/${tag}`}
@@ -110,7 +113,11 @@ export function Forum() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  <ArrowBigUp size={14} />
+                  {thread.upvotes || 0}
+                </div>
                 <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
                   <MessageSquare size={14} />
                   {thread.replies.length}
@@ -127,9 +134,22 @@ export function Forum() {
 
 export function ForumThreadPage() {
   const { id } = useParams();
+  const { getThread, addReply, upvoteThread, upvoteReply } = useForum();
+  const { user, isAuthenticated } = useAuth();
+  const [replyContent, setReplyContent] = useState('');
+  const [showReplyForm, setShowReplyForm] = useState(false);
+
   const thread = getThread(id || '');
 
   if (!thread) return <Navigate to="/forum" />;
+
+  const handleSubmitReply = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replyContent.trim()) return;
+    addReply(thread.id, replyContent);
+    setReplyContent('');
+    setShowReplyForm(false);
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 fade-in-up">
@@ -163,15 +183,72 @@ export function ForumThreadPage() {
           <span>{thread.date}</span>
         </div>
         <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>{thread.content}</p>
+          <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-text-secondary)' }}>{thread.content}</p>
+          <button
+            onClick={() => isAuthenticated && upvoteThread(thread.id)}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md transition-all hover:scale-105"
+            style={{ 
+              backgroundColor: 'var(--color-bg-tertiary)',
+              color: 'var(--color-accent)'
+            }}
+            disabled={!isAuthenticated}
+          >
+            <ArrowBigUp size={14} />
+            {thread.upvotes || 0}
+          </button>
         </div>
       </article>
 
       {/* Replies */}
       <section>
-        <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text-muted)' }}>
-          Ответы ({thread.replies.length})
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+            Ответы ({thread.replies.length})
+          </h2>
+          {isAuthenticated && !showReplyForm && (
+            <button
+              onClick={() => setShowReplyForm(true)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md transition-all hover:scale-105"
+              style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
+            >
+              <Send size={12} />
+              Ответить
+            </button>
+          )}
+        </div>
+
+        {showReplyForm && (
+          <form onSubmit={handleSubmitReply} className="mb-6 p-4 rounded-lg border" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}>
+            <textarea
+              value={replyContent}
+              onChange={e => setReplyContent(e.target.value)}
+              placeholder="Ваш ответ..."
+              rows={4}
+              className="w-full px-3 py-2 rounded-md border text-sm resize-none mb-3"
+              style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm transition-all hover:scale-105"
+                style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
+              >
+                <Send size={14} />
+                Отправить
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowReplyForm(false); setReplyContent(''); }}
+                className="px-4 py-2 rounded-md text-sm transition-all hover:scale-105"
+                style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+              >
+                Отмена
+              </button>
+            </div>
+          </form>
+        )}
+
         <div className="space-y-4">
           {thread.replies.map((reply, index) => (
             <div 
@@ -179,9 +256,26 @@ export function ForumThreadPage() {
               className="p-4 rounded-lg border transition-all hover:translate-x-1" 
               style={{ borderColor: 'var(--color-border)', animationDelay: `${index * 50}ms` }}
             >
-              <div className="flex items-center gap-3 mb-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                <span className="font-medium" style={{ color: 'var(--color-text)' }}>{reply.author}</span>
-                <span>{reply.date}</span>
+              <div className="flex items-center justify-between mb-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
+                  >
+                    {reply.authorAvatar || reply.author[0].toUpperCase()}
+                  </div>
+                  <span className="font-medium" style={{ color: 'var(--color-text)' }}>{reply.author}</span>
+                  <span>{reply.date}</span>
+                </div>
+                <button
+                  onClick={() => isAuthenticated && upvoteReply(thread.id, reply.id)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-md transition-all hover:scale-105"
+                  style={{ color: 'var(--color-accent)' }}
+                  disabled={!isAuthenticated}
+                >
+                  <ArrowBigUp size={14} />
+                  {reply.upvotes || 0}
+                </button>
               </div>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                 {reply.content}
@@ -189,6 +283,21 @@ export function ForumThreadPage() {
             </div>
           ))}
         </div>
+
+        {!isAuthenticated && (
+          <div className="mt-6 p-4 rounded-lg border text-center" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}>
+            <p className="text-sm mb-2" style={{ color: 'var(--color-text-muted)' }}>
+              Войдите, чтобы оставить комментарий
+            </p>
+            <Link 
+              to="/login" 
+              className="text-sm github-link"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              Войти в аккаунт
+            </Link>
+          </div>
+        )}
       </section>
     </div>
   );
