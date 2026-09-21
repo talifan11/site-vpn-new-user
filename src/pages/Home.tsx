@@ -5,13 +5,39 @@ export function Home() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
       <section className="max-w-2xl fade-in-up">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-6" style={{ color: 'var(--color-text)' }}>
-          VPS и VPN без лишних шагов
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4" style={{ color: 'var(--color-text)' }}>
+          DevOps Hub
         </h1>
-        <p className="text-lg leading-relaxed mb-8" style={{ color: 'var(--color-text-secondary)' }}>
-          Пошаговые инструкции для тех, кому нужен рабочий VPN-сервер, а не теоретическая статья.
-          Аренда VPS, настройка WireGuard, IKEv2 или OpenVPN, подключение телефона.
-          Каждый гайд проверен на реальных хостингах. Данные о блокировках портов обновляются при изменении политики провайдеров.
+        <div className="flex gap-3 flex-wrap mb-6">
+          <Link
+            to="/feed"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all hover:scale-105"
+            style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
+          >
+            Открыть ленту
+            <ArrowRight size={16} />
+          </Link>
+          <Link
+            to="/profile"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all hover:scale-105"
+            style={{ border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+          >
+            Личный кабинет
+          </Link>
+          <Link
+            to="/guides"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all hover:scale-105"
+            style={{ border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+          >
+            Гайды
+          </Link>
+        </div>
+        <p className="text-lg leading-relaxed mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+          Социальная сеть для инженеров, работающих с Linux, DevOps и инфраструктурой.
+        </p>
+        <p className="text-base leading-relaxed mb-8" style={{ color: 'var(--color-text-secondary)' }}>
+          Здесь вы найдёте проверенные инструкции по настройке VPS и VPN, сможете задать вопрос на форуме и получить ответ от опытных инженеров. 
+          Делитесь опытом, помогайте другим, зарабатывайте репутацию.
         </p>
       </section>
 

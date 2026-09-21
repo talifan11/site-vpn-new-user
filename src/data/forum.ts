@@ -1,8 +1,10 @@
 export interface ForumReply {
   id: string;
   author: string;
+  authorAvatar?: string;
   date: string;
   content: string;
+  upvotes?: number;
 }
 
 export interface ForumThread {
@@ -10,10 +12,12 @@ export interface ForumThread {
   title: string;
   category: string;
   author: string;
+  authorAvatar?: string;
   date: string;
   content: string;
   replies: ForumReply[];
   tags: string[];
+  upvotes?: number;
 }
 
 export const categories = ['Хостинги', 'WireGuard', 'IKEv2', 'OpenVPN', 'Диагностика'];
