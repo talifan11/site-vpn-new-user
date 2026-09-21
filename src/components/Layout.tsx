@@ -14,7 +14,7 @@ function ThemeSwitcher() {
   return (
     <button
       onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
-      className="p-2 rounded-md transition-colors duration-100"
+      className="p-2 rounded-md icon-hover"
       style={{ color: 'var(--color-text-secondary)' }}
       aria-label="Переключить тему"
     >
@@ -36,23 +36,26 @@ function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+    <header className="sticky top-0 z-50 border-b backdrop-blur-sm" style={{ borderColor: 'var(--color-border)', backgroundColor: 'color-mix(in srgb, var(--color-bg) 85%, transparent)' }}>
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link to="/" className="font-semibold text-sm tracking-tight" style={{ color: 'var(--color-text)' }}>
+        <Link to="/" className="font-semibold text-sm tracking-tight hover:opacity-80" style={{ color: 'var(--color-text)' }}>
           VPS/VPN
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
-          {navLinks.map(link => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="text-sm transition-colors duration-100"
-              style={{ color: location.pathname.startsWith(link.to) ? 'var(--color-text)' : 'var(--color-text-secondary)' }}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map(link => {
+            const isActive = location.pathname.startsWith(link.to);
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`text-sm ${isActive ? 'active-nav' : ''}`}
+                style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)' }}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <ThemeSwitcher />
         </nav>
 
@@ -65,18 +68,21 @@ function Header() {
       </div>
 
       {mobileOpen && (
-        <nav className="md:hidden border-t px-4 py-3 flex flex-col gap-3" style={{ borderColor: 'var(--color-border)' }}>
-          {navLinks.map(link => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="text-sm py-1"
-              style={{ color: location.pathname.startsWith(link.to) ? 'var(--color-text)' : 'var(--color-text-secondary)' }}
-              onClick={() => setMobileOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <nav className="md:hidden border-t px-4 py-3 flex flex-col gap-3 mobile-menu" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+          {navLinks.map(link => {
+            const isActive = location.pathname.startsWith(link.to);
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`text-sm py-1 ${isActive ? 'active-nav' : ''}`}
+                style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)' }}
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
       )}
     </header>
@@ -92,9 +98,9 @@ function Footer() {
           <p className="mt-1">Информационный ресурс для инженеров и системных администраторов</p>
         </div>
         <div className="flex gap-6 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-          <Link to="/about">О сайте</Link>
-          <Link to="/forum">Форум</Link>
-          <a href="mailto:feedback@vps-vpn.guide">Обратная связь</a>
+          <Link to="/about" className="github-link">О сайте</Link>
+          <Link to="/forum" className="github-link">Форум</Link>
+          <a href="mailto:feedback@vps-vpn.guide" className="github-link">Обратная связь</a>
         </div>
       </div>
     </footer>
@@ -102,10 +108,12 @@ function Footer() {
 }
 
 export function Layout() {
+  const location = useLocation();
+
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
       <Header />
-      <main className="flex-1">
+      <main className="flex-1" key={location.pathname}>
         <Outlet />
       </main>
       <Footer />

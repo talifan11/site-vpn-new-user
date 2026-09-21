@@ -17,15 +17,15 @@ export function CodeBlock({ code, lang, note }: CodeBlockProps) {
   };
 
   return (
-    <div className="my-4 rounded-lg border overflow-hidden" style={{ borderColor: 'var(--color-code-border)' }}>
+    <div className="my-4 rounded-lg border overflow-hidden code-block" style={{ borderColor: 'var(--color-code-border)' }}>
       <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: 'var(--color-code-border)', backgroundColor: 'var(--color-bg-tertiary)' }}>
         <span className="text-xs font-mono" style={{ color: 'var(--color-text-muted)' }}>
           {lang || 'text'}
         </span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-xs px-2 py-1 rounded transition-colors duration-100"
-          style={{ color: 'var(--color-text-muted)' }}
+          className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md copy-button"
+          style={{ color: copied ? 'var(--color-success)' : 'var(--color-text-muted)' }}
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
           {copied ? 'Скопировано' : 'Копировать'}

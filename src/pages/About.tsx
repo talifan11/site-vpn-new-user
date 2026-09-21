@@ -2,7 +2,7 @@ import { Mail } from 'lucide-react';
 
 export function About() {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
+    <div className="max-w-3xl mx-auto px-4 py-12 fade-in-up">
       <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>О сайте</h1>
 
       <div className="prose">
@@ -42,14 +42,14 @@ export function About() {
         </p>
       </div>
 
-      <div className="mt-12 p-6 rounded-lg border" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}>
+      <div className="mt-12 p-6 rounded-lg border transition-all hover:translate-x-1" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}>
         <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Обратная связь</h2>
         <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
           Нашли ошибку, хотите предложить тему для гайда или сообщить об изменении политики хостинга.
         </p>
         <a
           href="mailto:feedback@vps-vpn.guide"
-          className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-md border transition-colors duration-100"
+          className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-md border transition-all hover:scale-105"
           style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
         >
           <Mail size={16} />

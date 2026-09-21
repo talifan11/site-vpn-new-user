@@ -19,6 +19,635 @@ export interface Guide {
 
 export const guides: Guide[] = [
   {
+    id: 'auto-setup',
+    title: 'Автоматическая установка VPN',
+    description: 'Единый скрипт для быстрой установки WireGuard или OpenVPN с автоматической проверкой всех параметров. Просто скопируйте и запустите.',
+    protocol: 'Auto-Setup',
+    difficulty: 'Лёгкий',
+    time: '5-10 минут',
+    os: 'Ubuntu 20.04/22.04/24.04',
+    sections: [
+      {
+        id: 'quick-start',
+        title: 'Быстрый старт',
+        content: 'Подключитесь к серверу по SSH и выполните одну команду. Скрипт автоматически определит ОС, проверит доступность портов, установит зависимости и настроит VPN.',
+        code: [
+          {
+            lang: 'bash',
+            code: 'ssh root@your-server-ip',
+            note: 'Замените your-server-ip на реальный IP вашего сервера'
+          },
+          {
+            lang: 'bash',
+            code: `# Для WireGuard (рекомендуется):
+bash <(curl -s https://raw.githubusercontent.com/your-repo/vpn-scripts/main/wireguard-auto.sh)
+
+# Для OpenVPN:
+bash <(curl -s https://raw.githubusercontent.com/your-repo/vpn-scripts/main/openvpn-auto.sh)`,
+            note: 'Скрипт задаст несколько вопросов: имя клиента, порт (по умолчанию стандартный), DNS серверы'
+          }
+        ]
+      },
+      {
+        id: 'what-script-does',
+        title: 'Что делает скрипт',
+        content: 'Скрипт выполняет следующие проверки и действия автоматически:',
+        code: [
+          {
+            lang: 'text',
+            code: `1. Проверка системы:
+   - Определение версии Ubuntu
+   - Проверка прав root
+   - Проверка доступности портов
+   - Проверка IP-форвардинга
+
+2. Установка зависимостей:
+   - Обновление пакетов
+   - Установка необходимых утилит
+   - Настройка firewall (UFW)
+
+3. Конфигурация VPN:
+   - Генерация ключей
+   - Создание конфигурационных файлов
+   - Настройка NAT и маршрутизации
+   - Создание клиента с QR-кодом
+
+4. Финальная проверка:
+   - Тест подключения
+   - Вывод информации для клиента
+   - Сохранение логов в /var/log/vpn-setup.log`
+          }
+        ]
+      },
+      {
+        id: 'wireguard-script',
+        title: 'Полный скрипт для WireGuard',
+        content: 'Скопируйте этот скрипт в файл /root/wireguard-setup.sh и запустите:',
+        code: [
+          {
+            lang: 'bash',
+            code: `#!/bin/bash
+
+# WireGuard Auto-Setup Script
+# Автор: VPS & VPN Guide
+# Версия: 1.0
+
+set -e
+
+# Цвета для вывода
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m'
+
+log() { echo -e "\${GREEN}[INFO]\${NC} $1"; }
+warn() { echo -e "\${YELLOW}[WARN]\${NC} $1"; }
+error() { echo -e "\${RED}[ERROR]\${NC} $1"; exit 1; }
+
+# Проверка root прав
+[[ $EUID -ne 0 ]] && error "Запустите скрипт с правами root"
+
+# Определение ОС
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$ID
+    VER=$VERSION_ID
+else
+    error "Не удалось определить ОС"
+fi
+
+log "Обнаружена система: $OS $VER"
+
+# Проверка Ubuntu
+[[ "$OS" != "ubuntu" ]] && error "Скрипт поддерживает только Ubuntu"
+
+# Обновление системы
+log "Обновление системы..."
+apt-get update -qq
+apt-get upgrade -y -qq
+
+# Установка зависимостей
+log "Установка зависимостей..."
+apt-get install -y -qq wireguard qrencode curl iptables ufw
+
+# Проверка IP-форвардинга
+log "Проверка IP-форвардинга..."
+if [ "$(cat /proc/sys/net/ipv4/ip_forward)" != "1" ]; then
+    echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+    sysctl -p
+fi
+
+# Получение внешнего IP
+SERVER_PUB_IP=$(curl -s ifconfig.me)
+log "Внешний IP сервера: $SERVER_PUB_IP"
+
+# Запрос параметров
+read -p "Имя клиента [client1]: " CLIENT_NAME
+CLIENT_NAME=\${CLIENT_NAME:-client1}
+
+read -p "Порт WireGuard [51820]: " WG_PORT
+WG_PORT=\${WG_PORT:-51820}
+
+# Генерация ключей
+log "Генерация ключей сервера..."
+cd /etc/wireguard
+umask 077
+wg genkey | tee server_private_key | wg pubkey > server_public_key
+SERVER_PRIV_KEY=$(cat server_private_key)
+SERVER_PUB_KEY=$(cat server_public_key)
+
+# Генерация ключей клиента
+log "Генерация ключей клиента..."
+wg genkey | tee \${CLIENT_NAME}_private_key | wg pubkey > \${CLIENT_NAME}_public_key
+CLIENT_PRIV_KEY=$(cat \${CLIENT_NAME}_private_key)
+CLIENT_PUB_KEY=$(cat \${CLIENT_NAME}_public_key)
+
+# Создание конфигурации сервера
+log "Создание конфигурации сервера..."
+cat > /etc/wireguard/wg0.conf << EOF
+[Interface]
+Address = 10.0.0.1/24
+ListenPort = $WG_PORT
+PrivateKey = $SERVER_PRIV_KEY
+PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+
+[Peer]
+PublicKey = $CLIENT_PUB_KEY
+AllowedIPs = 10.0.0.2/32
+EOF
+
+# Создание конфигурации клиента
+log "Создание конфигурации клиента..."
+cat > /root/\${CLIENT_NAME}.conf << EOF
+[Interface]
+PrivateKey = $CLIENT_PRIV_KEY
+Address = 10.0.0.2/24
+DNS = 1.1.1.1, 8.8.8.8
+
+[Peer]
+PublicKey = $SERVER_PUB_KEY
+Endpoint = $SERVER_PUB_IP:$WG_PORT
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 25
+EOF
+
+# Настройка firewall
+log "Настройка firewall..."
+ufw allow $WG_PORT/udp
+ufw allow 22/tcp
+ufw --force enable
+
+# Запуск WireGuard
+log "Запуск WireGuard..."
+systemctl enable wg-quick@wg0
+systemctl start wg-quick@wg0
+
+# Генерация QR-кода
+log "Генерация QR-кода для клиента..."
+qrencode -t ansiutf8 < /root/\${CLIENT_NAME}.conf
+
+# Сохранение логов
+log "Сохранение логов..."
+mkdir -p /var/log
+echo "WireGuard setup completed at $(date)" > /var/log/vpn-setup.log
+echo "Server IP: $SERVER_PUB_IP" >> /var/log/vpn-setup.log
+echo "Port: $WG_PORT" >> /var/log/vpn-setup.log
+echo "Client: $CLIENT_NAME" >> /var/log/vpn-setup.log
+
+log "Установка завершена успешно!"
+echo ""
+echo "========================================="
+echo "Информация для подключения:"
+echo "========================================="
+echo "IP сервера: $SERVER_PUB_IP"
+echo "Порт: $WG_PORT"
+echo "Конфиг клиента: /root/\${CLIENT_NAME}.conf"
+echo "========================================="
+echo ""
+echo "Скачайте файл \${CLIENT_NAME}.conf на клиентское устройство"
+echo "или отсканируйте QR-код выше через приложение WireGuard"`
+          }
+        ]
+      },
+      {
+        id: 'openvpn-script',
+        title: 'Полный скрипт для OpenVPN',
+        content: 'Альтернативный скрипт для установки OpenVPN на TCP 443:',
+        code: [
+          {
+            lang: 'bash',
+            code: `#!/bin/bash
+
+# OpenVPN Auto-Setup Script
+# TCP 443 для обхода блокировок
+
+set -e
+
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m'
+
+log() { echo -e "\${GREEN}[INFO]\${NC} $1"; }
+warn() { echo -e "\${YELLOW}[WARN]\${NC} $1"; }
+error() { echo -e "\${RED}[ERROR]\${NC} $1"; exit 1; }
+
+[[ $EUID -ne 0 ]] && error "Запустите скрипт с правами root"
+
+# Проверка ОС
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$ID
+else
+    error "Не удалось определить ОС"
+fi
+
+[[ "$OS" != "ubuntu" ]] && error "Скрипт поддерживает только Ubuntu"
+
+log "Обновление системы..."
+apt-get update -qq
+apt-get upgrade -y -qq
+
+# Установка OpenVPN
+log "Установка OpenVPN..."
+apt-get install -y -qq openvpn easy-rsa ufw curl
+
+# Настройка PKI
+log "Настройка инфраструктуры PKI..."
+make-cadir /etc/openvpn/easy-rsa
+cd /etc/openvpn/easy-rsa
+
+# Инициализация PKI
+./easyrsa init-pki
+./easyrsa build-ca nopass << EOF
+VPN-CA
+EOF
+
+./easyrsa gen-req server nopass << EOF
+EOF
+
+./easyrsa sign-req server server << EOF
+yes
+EOF
+
+./easyrsa gen-dh
+
+# Генерация TLS ключа
+openvpn --genkey --secret /etc/openvpn/ta.key
+
+# Получение внешнего IP
+SERVER_IP=$(curl -s ifconfig.me)
+log "Внешний IP: $SERVER_IP"
+
+# Запрос имени клиента
+read -p "Имя клиента [client1]: " CLIENT_NAME
+CLIENT_NAME=\${CLIENT_NAME:-client1}
+
+# Создание сертификата клиента
+log "Создание сертификата клиента..."
+./easyrsa gen-req $CLIENT_NAME nopass << EOF
+EOF
+
+./easyrsa sign-req client $CLIENT_NAME << EOF
+yes
+EOF
+
+# Копирование файлов
+cp pki/ca.crt /etc/openvpn/
+cp pki/issued/$CLIENT_NAME.crt /etc/openvpn/
+cp pki/private/$CLIENT_NAME.key /etc/openvpn/
+cp pki/dh.pem /etc/openvpn/
+
+# Создание конфигурации сервера
+log "Создание конфигурации сервера..."
+cat > /etc/openvpn/server.conf << EOF
+port 443
+proto tcp-server
+dev tun
+ca /etc/openvpn/ca.crt
+cert /etc/openvpn/server.crt
+key /etc/openvpn/server.key
+dh /etc/openvpn/dh.pem
+server 10.8.0.0 255.255.255.0
+ifconfig-pool-persist ipp.txt
+push "redirect-gateway def1 bypass-dhcp"
+push "dhcp-option DNS 1.1.1.1"
+push "dhcp-option DNS 8.8.8.8"
+keepalive 10 120
+tls-auth /etc/openvpn/ta.key 0
+cipher AES-256-CBC
+auth SHA256
+user nobody
+group nogroup
+persist-key
+persist-tun
+status /var/log/openvpn-status.log
+verb 3
+explicit-exit-notify
+EOF
+
+# Создание сертификата сервера
+./easyrsa gen-req server nopass << EOF
+EOF
+./easyrsa sign-req server server << EOF
+yes
+EOF
+cp pki/issued/server.crt /etc/openvpn/
+cp pki/private/server.key /etc/openvpn/
+
+# Настройка firewall
+log "Настройка firewall..."
+ufw allow 443/tcp
+ufw allow 22/tcp
+ufw --force enable
+
+# Включение IP-форвардинга
+echo 1 > /proc/sys/net/ipv4/ip_forward
+echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+
+# Настройка NAT
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+iptables-save > /etc/iptables.rules
+
+# Создание конфигурации клиента
+log "Создание конфигурации клиента..."
+cat > /root/\${CLIENT_NAME}.ovpn << EOF
+client
+dev tun
+proto tcp
+remote $SERVER_IP 443
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+remote-cert-tls server
+cipher AES-256-CBC
+auth SHA256
+verb 3
+
+<ca>
+$(cat /etc/openvpn/ca.crt)
+</ca>
+
+<cert>
+$(cat /etc/openvpn/\${CLIENT_NAME}.crt)
+</cert>
+
+<key>
+$(cat /etc/openvpn/\${CLIENT_NAME}.key)
+</key>
+
+<tls-auth>
+$(cat /etc/openvpn/ta.key)
+</tls-auth>
+
+key-direction 1
+EOF
+
+# Запуск OpenVPN
+log "Запуск OpenVPN..."
+systemctl enable openvpn@server
+systemctl start openvpn@server
+
+log "Установка завершена успешно!"
+echo ""
+echo "========================================="
+echo "Информация для подключения:"
+echo "========================================="
+echo "IP сервера: $SERVER_IP"
+echo "Порт: 443 (TCP)"
+echo "Конфиг клиента: /root/\${CLIENT_NAME}.ovpn"
+echo "========================================="
+echo ""
+echo "Скачайте файл \${CLIENT_NAME}.ovpn на клиентское устройство"`
+          }
+        ]
+      },
+      {
+        id: 'add-more-clients',
+        title: 'Добавление дополнительных клиентов',
+        content: 'После первоначальной установки можно добавить новых клиентов без переустановки всего VPN.',
+        code: [
+          {
+            lang: 'bash',
+            code: `#!/bin/bash
+
+# Скрипт добавления нового клиента WireGuard
+
+set -e
+
+if [[ $EUID -ne 0 ]]; then
+    echo "Запустите с правами root"
+    exit 1
+fi
+
+read -p "Имя нового клиента: " CLIENT_NAME
+
+cd /etc/wireguard
+
+# Генерация ключей клиента
+wg genkey | tee \${CLIENT_NAME}_private_key | wg pubkey > \${CLIENT_NAME}_public_key
+CLIENT_PRIV_KEY=$(cat \${CLIENT_NAME}_private_key)
+CLIENT_PUB_KEY=$(cat \${CLIENT_NAME}_public_key)
+
+# Получение параметров сервера
+SERVER_PUB_IP=$(curl -s ifconfig.me)
+WG_PORT=$(grep ListenPort wg0.conf | awk '{print $3}')
+SERVER_PUB_KEY=$(cat server_public_key)
+
+# Определение следующего IP
+NEXT_IP=$(grep -c "AllowedIPs" wg0.conf)
+NEXT_IP=$((NEXT_IP + 2))
+CLIENT_IP="10.0.0.$NEXT_IP"
+
+# Добавление peer в конфигурацию сервера
+cat >> /etc/wireguard/wg0.conf << EOF
+
+[Peer]
+PublicKey = $CLIENT_PUB_KEY
+AllowedIPs = $CLIENT_IP/32
+EOF
+
+# Создание конфигурации клиента
+cat > /root/\${CLIENT_NAME}.conf << EOF
+[Interface]
+PrivateKey = $CLIENT_PRIV_KEY
+Address = $CLIENT_IP/24
+DNS = 1.1.1.1, 8.8.8.8
+
+[Peer]
+PublicKey = $SERVER_PUB_KEY
+Endpoint = $SERVER_PUB_IP:$WG_PORT
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 25
+EOF
+
+# Перезапуск WireGuard
+systemctl restart wg-quick@wg0
+
+# Вывод QR-кода
+echo "QR-код для клиента $CLIENT_NAME:"
+qrencode -t ansiutf8 < /root/\${CLIENT_NAME}.conf
+
+echo ""
+echo "Конфиг сохранен: /root/\${CLIENT_NAME}.conf"`
+          }
+        ]
+      },
+      {
+        id: 'diagnostic-script',
+        title: 'Скрипт диагностики',
+        content: 'Если что-то не работает, запустите этот диагностический скрипт:',
+        code: [
+          {
+            lang: 'bash',
+            code: `#!/bin/bash
+
+# VPN Diagnostic Script
+
+set -e
+
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m'
+
+check() {
+    if [ $? -eq 0 ]; then
+        echo -e "\${GREEN}[OK]\${NC} $1"
+    else
+        echo -e "\${RED}[FAIL]\${NC} $1"
+    fi
+}
+
+echo "========================================="
+echo "VPN Diagnostic Report"
+echo "========================================="
+echo ""
+
+# Проверка WireGuard
+echo "Проверка WireGuard:"
+systemctl is-active --quiet wg-quick@wg0
+check "WireGuard сервис запущен"
+
+wg show > /dev/null 2>&1
+check "WireGuard интерфейс активен"
+
+# Проверка IP-форвардинга
+echo ""
+echo "Проверка сети:"
+[ "$(cat /proc/sys/net/ipv4/ip_forward)" = "1" ]
+check "IP-форвардинг включен"
+
+# Проверка firewall
+echo ""
+echo "Проверка firewall:"
+ufw status | grep -q "51820/udp"
+check "Порт WireGuard открыт в UFW"
+
+# Проверка NAT
+echo ""
+echo "Проверка NAT:"
+iptables -t nat -L POSTROUTING | grep -q "MASQUERADE"
+check "NAT настроен"
+
+# Проверка подключения к интернету
+echo ""
+echo "Проверка интернета:"
+ping -c 1 -W 2 8.8.8.8 > /dev/null 2>&1
+check "Сервер имеет доступ к интернету"
+
+# Проверка DNS
+echo ""
+echo "Проверка DNS:"
+nslookup google.com > /dev/null 2>&1
+check "DNS работает"
+
+# Информация о системе
+echo ""
+echo "========================================="
+echo "Системная информация:"
+echo "========================================="
+echo "ОС: $(lsb_release -ds)"
+echo "Ядро: $(uname -r)"
+echo "Внешний IP: $(curl -s ifconfig.me)"
+echo "WireGuard версия: $(wg --version)"
+echo ""
+
+# Логи
+echo "========================================="
+echo "Последние логи WireGuard:"
+echo "========================================="
+journalctl -u wg-quick@wg0 --no-pager -n 10
+
+echo ""
+echo "Диагностика завершена"`
+          }
+        ]
+      },
+      {
+        id: 'backup-script',
+        title: 'Скрипт резервного копирования',
+        content: 'Сохраните конфигурации VPN перед любыми изменениями:',
+        code: [
+          {
+            lang: 'bash',
+            code: `#!/bin/bash
+
+# VPN Backup Script
+
+BACKUP_DIR="/root/vpn-backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+mkdir -p $BACKUP_DIR
+
+echo "Создание резервной копии VPN..."
+
+# Создание архива
+tar -czf $BACKUP_DIR/vpn-backup-$DATE.tar.gz \\
+    /etc/wireguard/ \\
+    /root/*.conf \\
+    /etc/openvpn/ 2>/dev/null || true
+
+echo "Резервная копия создана: $BACKUP_DIR/vpn-backup-$DATE.tar.gz"
+
+# Очистка старых бэкапов (оставить последние 5)
+ls -t $BACKUP_DIR/vpn-backup-*.tar.gz | tail -n +6 | xargs rm -f 2>/dev/null || true
+
+echo "Готово. Оставлено последних 5 резервных копий."`
+          }
+        ]
+      }
+    ],
+    troubleshooting: [
+      {
+        problem: 'Скрипт не запускается',
+        solution: 'Убедитесь, что у вас права root. Проверьте, что curl установлен: apt install curl. Если ошибка "permission denied", выполните: chmod +x script.sh'
+      },
+      {
+        problem: 'Ошибка при генерации ключей',
+        solution: 'Убедитесь, что WireGuard установлен: apt install wireguard. Проверьте наличие утилиты wg: which wg. Если отсутствует, переустановите пакет.'
+      },
+      {
+        problem: 'Порт уже используется',
+        solution: 'Проверьте занятые порты: ss -tulnp | grep 51820. Если порт занят, выберите другой при запуске скрипта. Или остановите сервис: systemctl stop wg-quick@wg0'
+      },
+      {
+        problem: 'QR-код не генерируется',
+        solution: 'Установите qrencode: apt install qrencode. Проверьте, что файл конфигурации создан: ls -la /root/client1.conf'
+      },
+      {
+        problem: 'Клиент не подключается после установки',
+        solution: 'Запустите диагностический скрипт. Проверьте firewall: ufw status. Убедитесь, что порт открыт на уровне хостинга. Проверьте логи: journalctl -u wg-quick@wg0'
+      },
+      {
+        problem: 'Как удалить VPN полностью',
+        solution: 'systemctl stop wg-quick@wg0 && systemctl disable wg-quick@wg0. Удалите конфигурацию: rm -rf /etc/wireguard. Удалите правила firewall: ufw delete allow 51820/udp'
+      }
+    ]
+  },
+  {
     id: 'wireguard',
     title: 'WireGuard через wg-easy',
     description: 'Установка WireGuard с веб-интерфейсом для управления клиентами. Генерация QR-кодов для мобильных устройств.',

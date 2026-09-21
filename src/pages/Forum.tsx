@@ -1,6 +1,6 @@
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { threads, categories, getThread, getThreadsByCategory } from '../data/forum';
-import { MessageSquare, Clock } from 'lucide-react';
+import { MessageSquare, Clock, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 
 export function Forum() {
@@ -11,7 +11,7 @@ export function Forum() {
     : threads;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
+    <div className="max-w-4xl mx-auto px-4 py-12 fade-in-up">
       <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>Форум</h1>
       <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
         Типичные вопросы и ответы по настройке VPN и выбору хостинга.
@@ -21,7 +21,7 @@ export function Forum() {
       <div className="flex flex-wrap gap-2 mb-8">
         <button
           onClick={() => setActiveCategory(null)}
-          className="text-xs px-3 py-1.5 rounded-full border transition-colors duration-100"
+          className="text-xs px-3 py-1.5 rounded-full border transition-all hover:scale-105"
           style={{
             borderColor: !activeCategory ? 'var(--color-accent)' : 'var(--color-border)',
             backgroundColor: !activeCategory ? 'var(--color-bg-tertiary)' : 'transparent',
@@ -34,7 +34,7 @@ export function Forum() {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className="text-xs px-3 py-1.5 rounded-full border transition-colors duration-100"
+            className="text-xs px-3 py-1.5 rounded-full border transition-all hover:scale-105"
             style={{
               borderColor: activeCategory === cat ? 'var(--color-accent)' : 'var(--color-border)',
               backgroundColor: activeCategory === cat ? 'var(--color-bg-tertiary)' : 'transparent',
@@ -48,20 +48,20 @@ export function Forum() {
 
       {/* Threads */}
       <div className="space-y-2">
-        {filteredThreads.map(thread => (
+        {filteredThreads.map((thread, index) => (
           <Link
             key={thread.id}
             to={`/forum/${thread.id}`}
-            className="block p-4 rounded-lg border transition-colors duration-100"
-            style={{ borderColor: 'var(--color-border)' }}
+            className="block p-4 rounded-lg border card-hover group"
+            style={{ borderColor: 'var(--color-border)', animationDelay: `${index * 30}ms` }}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium mb-1 truncate" style={{ color: 'var(--color-text)' }}>
+                <h3 className="text-sm font-medium mb-2 truncate" style={{ color: 'var(--color-text)' }}>
                   {thread.title}
                 </h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-xs px-2 py-0.5 rounded badge" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
                     {thread.category}
                   </span>
                   <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
@@ -72,9 +72,12 @@ export function Forum() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-xs shrink-0" style={{ color: 'var(--color-text-muted)' }}>
-                <MessageSquare size={14} />
-                {thread.replies.length}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  <MessageSquare size={14} />
+                  {thread.replies.length}
+                </div>
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" style={{ color: 'var(--color-accent)' }} />
               </div>
             </div>
           </Link>
@@ -91,19 +94,19 @@ export function ForumThreadPage() {
   if (!thread) return <Navigate to="/forum" />;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <Link to="/forum" className="text-sm mb-6 inline-block" style={{ color: 'var(--color-text-muted)' }}>
+    <div className="max-w-4xl mx-auto px-4 py-12 fade-in-up">
+      <Link to="/forum" className="text-sm mb-6 inline-flex items-center gap-1 github-link" style={{ color: 'var(--color-text-muted)' }}>
         Назад к форуму
       </Link>
 
       {/* Thread */}
       <article className="mb-8">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
+        <div className="flex items-center gap-3 mb-3 flex-wrap">
+          <span className="text-xs px-2 py-0.5 rounded badge" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
             {thread.category}
           </span>
           {thread.tags.map(tag => (
-            <span key={tag} className="text-xs" style={{ color: 'var(--color-accent)' }}>
+            <span key={tag} className="text-xs badge" style={{ color: 'var(--color-accent)' }}>
               #{tag}
             </span>
           ))}
@@ -114,7 +117,7 @@ export function ForumThreadPage() {
           <span>{thread.date}</span>
         </div>
         <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}>
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{thread.content}</p>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>{thread.content}</p>
         </div>
       </article>
 
@@ -124,8 +127,12 @@ export function ForumThreadPage() {
           Ответы ({thread.replies.length})
         </h2>
         <div className="space-y-4">
-          {thread.replies.map(reply => (
-            <div key={reply.id} className="p-4 rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+          {thread.replies.map((reply, index) => (
+            <div 
+              key={reply.id} 
+              className="p-4 rounded-lg border transition-all hover:translate-x-1" 
+              style={{ borderColor: 'var(--color-border)', animationDelay: `${index * 50}ms` }}
+            >
               <div className="flex items-center gap-3 mb-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 <span className="font-medium" style={{ color: 'var(--color-text)' }}>{reply.author}</span>
                 <span>{reply.date}</span>

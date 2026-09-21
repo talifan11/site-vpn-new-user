@@ -192,7 +192,7 @@ function ChecklistItem({ item, checked, onToggle }: { item: CheckItem; checked: 
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="border rounded-lg overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
+    <div className="border rounded-lg overflow-hidden transition-all hover:translate-x-1" style={{ borderColor: 'var(--color-border)' }}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center gap-3 p-4 text-left transition-colors duration-100"
@@ -200,7 +200,7 @@ function ChecklistItem({ item, checked, onToggle }: { item: CheckItem; checked: 
       >
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          className="shrink-0"
+          className="shrink-0 transition-transform hover:scale-110"
         >
           {checked
             ? <Check size={18} style={{ color: 'var(--color-success)' }} />
@@ -213,7 +213,7 @@ function ChecklistItem({ item, checked, onToggle }: { item: CheckItem; checked: 
         {expanded ? <ChevronDown size={16} style={{ color: 'var(--color-text-muted)' }} /> : <ChevronRight size={16} style={{ color: 'var(--color-text-muted)' }} />}
       </button>
       {expanded && (
-        <div className="px-4 pb-4 pl-11">
+        <div className="px-4 pb-4 pl-11 tab-content">
           <p className="text-sm mb-3" style={{ color: 'var(--color-text-secondary)' }}>{item.description}</p>
           {item.commands?.map((cmd, i) => (
             <pre key={i} className="p-3 rounded text-xs font-mono overflow-x-auto mb-2" style={{ backgroundColor: 'var(--color-code-bg)', color: 'var(--color-text-secondary)' }}>
@@ -239,16 +239,36 @@ export function Diagnostics() {
   };
 
   const totalItems = checklist.reduce((acc, s) => acc + s.items.length, 0);
+  const progress = (checked.size / totalItems) * 100;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
+    <div className="max-w-4xl mx-auto px-4 py-12 fade-in-up">
       <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>Диагностика VPN</h1>
       <p className="text-sm mb-2" style={{ color: 'var(--color-text-secondary)' }}>
         Чек-лист для поиска причин, по которым VPN не подключается. Двигайтесь от простого к сложному.
       </p>
-      <p className="text-xs mb-8" style={{ color: 'var(--color-text-muted)' }}>
-        Прогресс: {checked.size} / {totalItems}
-      </p>
+      
+      {/* Progress bar */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            Прогресс: {checked.size} / {totalItems}
+          </p>
+          <p className="text-xs font-mono" style={{ color: 'var(--color-accent)' }}>
+            {Math.round(progress)}%
+          </p>
+        </div>
+        <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
+          <div 
+            className="h-full rounded-full progress-bar" 
+            style={{ 
+              width: `${progress}%`, 
+              backgroundColor: 'var(--color-accent)',
+              transition: 'width 300ms ease'
+            }} 
+          />
+        </div>
+      </div>
 
       <div className="space-y-8">
         {checklist.map((section, si) => (
@@ -280,7 +300,7 @@ export function Diagnostics() {
         </h2>
         <div className="space-y-4">
           {blockingSigns.map((item, i) => (
-            <div key={i} className="p-4 rounded-lg border" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}>
+            <div key={i} className="p-4 rounded-lg border transition-all hover:translate-x-1" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}>
               <p className="text-sm font-medium mb-2" style={{ color: 'var(--color-text)' }}>{item.sign}</p>
               <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{item.action}</p>
             </div>

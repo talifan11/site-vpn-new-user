@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Server, Shield, Wrench, ArrowRight } from 'lucide-react';
+import { Server, Shield, Wrench, ArrowRight, Zap } from 'lucide-react';
 
 export function Home() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
-      <section className="max-w-2xl">
+      <section className="max-w-2xl fade-in-up">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-6" style={{ color: 'var(--color-text)' }}>
           VPS и VPN без лишних шагов
         </h1>
@@ -18,60 +18,83 @@ export function Home() {
       <section className="grid md:grid-cols-3 gap-4 mb-16">
         <Link
           to="/hosts"
-          className="block p-6 rounded-lg border transition-colors duration-100 group"
+          className="block p-6 rounded-lg border card-hover group"
           style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}
         >
-          <Server size={24} className="mb-3" style={{ color: 'var(--color-accent)' }} />
+          <Server size={24} className="mb-3 transition-transform group-hover:scale-110" style={{ color: 'var(--color-accent)' }} />
           <h2 className="font-semibold mb-2" style={{ color: 'var(--color-text)' }}>Выбор хостинга</h2>
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-sm mb-3" style={{ color: 'var(--color-text-secondary)' }}>
             Сравнение 10 хостингов по критериям, важным для VPN: блокировки портов, firewall, поддержка.
           </p>
-          <span className="inline-flex items-center gap-1 text-sm mt-3" style={{ color: 'var(--color-accent)' }}>
-            Перейти <ArrowRight size={14} />
+          <span className="inline-flex items-center gap-1 text-sm github-link" style={{ color: 'var(--color-accent)' }}>
+            Перейти <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
           </span>
         </Link>
 
         <Link
           to="/guides"
-          className="block p-6 rounded-lg border transition-colors duration-100 group"
+          className="block p-6 rounded-lg border card-hover group"
           style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}
         >
-          <Shield size={24} className="mb-3" style={{ color: 'var(--color-accent)' }} />
+          <Shield size={24} className="mb-3 transition-transform group-hover:scale-110" style={{ color: 'var(--color-accent)' }} />
           <h2 className="font-semibold mb-2" style={{ color: 'var(--color-text)' }}>Настройка VPN</h2>
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-sm mb-3" style={{ color: 'var(--color-text-secondary)' }}>
             WireGuard, IKEv2, OpenVPN. Команды, конфигурации, QR-коды для телефона.
           </p>
-          <span className="inline-flex items-center gap-1 text-sm mt-3" style={{ color: 'var(--color-accent)' }}>
-            Перейти <ArrowRight size={14} />
+          <span className="inline-flex items-center gap-1 text-sm github-link" style={{ color: 'var(--color-accent)' }}>
+            Перейти <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
           </span>
         </Link>
 
         <Link
           to="/diagnostics"
-          className="block p-6 rounded-lg border transition-colors duration-100 group"
+          className="block p-6 rounded-lg border card-hover group"
           style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}
         >
-          <Wrench size={24} className="mb-3" style={{ color: 'var(--color-accent)' }} />
+          <Wrench size={24} className="mb-3 transition-transform group-hover:scale-110" style={{ color: 'var(--color-accent)' }} />
           <h2 className="font-semibold mb-2" style={{ color: 'var(--color-text)' }}>Диагностика проблем</h2>
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-sm mb-3" style={{ color: 'var(--color-text-secondary)' }}>
             Чек-лист от простого к сложному: firewall, NAT, блокировки хостинга, логи.
           </p>
-          <span className="inline-flex items-center gap-1 text-sm mt-3" style={{ color: 'var(--color-accent)' }}>
-            Перейти <ArrowRight size={14} />
+          <span className="inline-flex items-center gap-1 text-sm github-link" style={{ color: 'var(--color-accent)' }}>
+            Перейти <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
           </span>
         </Link>
       </section>
 
-      <section>
-        <h2 className="text-xl font-semibold mb-6" style={{ color: 'var(--color-text)' }}>Актуальные гайды</h2>
+      <section className="fade-in-up">
+        <div className="flex items-center gap-2 mb-6">
+          <Zap size={20} style={{ color: 'var(--color-accent)' }} />
+          <h2 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>Актуальные гайды</h2>
+        </div>
         <div className="grid md:grid-cols-3 gap-4">
           <Link
-            to="/guides/wireguard"
-            className="p-5 rounded-lg border transition-colors duration-100"
+            to="/guides/auto-setup"
+            className="p-5 rounded-lg border card-hover group"
             style={{ borderColor: 'var(--color-border)' }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-mono px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
+              <span className="text-xs font-mono px-2 py-0.5 rounded badge" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-success)' }}>
+                NEW
+              </span>
+              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>5-10 мин</span>
+            </div>
+            <h3 className="font-medium text-sm mb-1" style={{ color: 'var(--color-text)' }}>Автоматическая установка VPN</h3>
+            <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+              Единый скрипт с проверкой всех параметров. Просто скопируйте и запустите
+            </p>
+            <span className="inline-flex items-center gap-1 text-xs mt-2 github-link" style={{ color: 'var(--color-accent)' }}>
+              Подробнее <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
+
+          <Link
+            to="/guides/wireguard"
+            className="p-5 rounded-lg border card-hover group"
+            style={{ borderColor: 'var(--color-border)' }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-mono px-2 py-0.5 rounded badge" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
                 WireGuard
               </span>
               <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>15-20 мин</span>
@@ -80,15 +103,18 @@ export function Home() {
             <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
               Docker-контейнер, веб-интерфейс, QR-коды для мобильных устройств
             </p>
+            <span className="inline-flex items-center gap-1 text-xs mt-2 github-link" style={{ color: 'var(--color-accent)' }}>
+              Подробнее <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
+            </span>
           </Link>
 
           <Link
             to="/guides/ikev2"
-            className="p-5 rounded-lg border transition-colors duration-100"
+            className="p-5 rounded-lg border card-hover group"
             style={{ borderColor: 'var(--color-border)' }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-mono px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
+              <span className="text-xs font-mono px-2 py-0.5 rounded badge" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
                 IKEv2
               </span>
               <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>30-40 мин</span>
@@ -97,23 +123,9 @@ export function Home() {
             <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
               EAP-MSCHAPv2, сертификаты Let's Encrypt, нативная поддержка на всех ОС
             </p>
-          </Link>
-
-          <Link
-            to="/guides/openvpn"
-            className="p-5 rounded-lg border transition-colors duration-100"
-            style={{ borderColor: 'var(--color-border)' }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-mono px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
-                OpenVPN
-              </span>
-              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>10-15 мин</span>
-            </div>
-            <h3 className="font-medium text-sm mb-1" style={{ color: 'var(--color-text)' }}>OpenVPN через TCP 443</h3>
-            <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-              Официальный скрипт, маскировка под HTTPS, максимальная совместимость
-            </p>
+            <span className="inline-flex items-center gap-1 text-xs mt-2 github-link" style={{ color: 'var(--color-accent)' }}>
+              Подробнее <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
+            </span>
           </Link>
         </div>
       </section>
