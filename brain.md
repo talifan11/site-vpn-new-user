@@ -887,6 +887,110 @@ Email: demo@devops.local
 
 ---
 
+## Этап 8: Переход на Supabase (Этап 1 из плана трансформации)
+
+### Что было сделано
+
+**Установленные зависимости:**
+- `@supabase/supabase-js` — клиент Supabase
+- `@tanstack/react-query` — кэширование запросов, пагинация
+- `zod` — валидация форм
+- `date-fns` — форматирование дат
+- `react-dropzone` — drag-and-drop загрузка файлов
+
+**Созданные файлы:**
+
+1. **`.env.example`** — шаблон переменных окружения
+2. **`src/vite-env.d.ts`** — типы для Vite env
+3. **`src/types/database.ts`** — типы БД (эквивалент `supabase gen types`)
+4. **`src/lib/constants.ts`** — централизованные константы (лимиты, бакеты, regex)
+5. **`src/lib/utils.ts`** — утилиты (cn, formatRelative, formatBytes, getInitials, и т.д.)
+6. **`src/lib/validators.ts`** — Zod-схемы для всех форм
+7. **`src/lib/migrateForum.ts`** — клиентский скрипт миграции форума из localStorage
+8. **`src/api/supabase.ts`** — singleton-клиент Supabase
+
+**SQL-миграции:**
+- `supabase/migrations/001_initial_schema.sql` — полная схема БД (15 таблиц + триггеры + функции)
+- `supabase/migrations/002_rls_policies.sql` — RLS политики для всех таблиц
+- `supabase/migrations/003_storage.sql` — бакеты Storage и их политики
+- `supabase/migrations/004_migrate_forum.sql` — служебное сообщество `forum`
+
+**Edge Function:**
+- `supabase/functions/check-file-size/index.ts` — проверка размера файла перед выдачей signed URL
+
+**Документация:**
+- `SUPABASE_SETUP.md` — пошаговая инструкция по настройке Supabase
+
+### Схема БД (15 таблиц)
+
+1. **profiles** — 1:1 с auth.users, репутация, роль, настройки приватности
+2. **communities** — сообщества (включая служебное `forum`)
+3. **community_members** — участники сообществ с ролями
+4. **community_bans** — баны в сообществах (отдельная таблица)
+5. **posts** — универсальные посты (личная стена + стена сообщества)
+6. **post_tags** — теги постов (для сохранения тегов при миграции форума)
+7. **comments** — комментарии с вложенностью (2 уровня)
+8. **likes** — универсальные лайки (посты + комментарии)
+9. **files** — метаданные загруженных файлов
+10. **projects** — проекты пользователей
+11. **project_collaborators** — соавторы проектов
+12. **friendships** — дружба (pending/accepted/blocked)
+13. **notifications** — уведомления с JSONB payload
+14. **conversations** — диалоги 1-на-1 (канонический порядок user_a < user_b)
+15. **messages** — сообщения в диалогах
+
+### Ключевые решения
+
+- **Вложенность комментариев**: 2 уровня, ответ на ответ крепится к корневому с @mention
+- **Бан**: отдельная таблица `community_bans`, не смешивается с ролями
+- **Миграция форума**: клиентский скрипт при первом логине владельца данных
+- **Служебное сообщество `forum`**: создаётся автоматически, ID фиксированный
+- **Realtime**: подписки только на конкретные сущности, не на всю БД
+- **Валидация файлов**: клиент + Edge Function, не RLS
+
+### Следующие этапы
+
+**Этап 2**: Сервисный слой + авторизация
+- `src/api/auth.ts` — signIn/up/out
+- Переписать `AuthContext` на Supabase Auth
+- Миграция репутации из localStorage
+- Страницы `/login`, `/register` с Zod-валидацией
+
+**Этап 3**: Профиль
+- `src/api/profiles.ts` + `src/hooks/useProfile.ts`
+- Страница `/u/:username` с табами
+- `/settings` — редактирование
+- Загрузка аватара через Storage
+
+**Этап 4**: Посты и лента
+- `src/api/posts.ts`, `comments.ts`, `likes.ts`
+- `/feed` с cursor-based пагинацией
+- PostCard, PostComposer, CommentTree, LikeButton
+- Realtime на новые посты
+
+**Этап 5**: Сообщества
+- `src/api/communities.ts`, `communityMembers.ts`
+- `/communities`, `/c/:slug`, `/communities/new`
+- Модерация (бан через `community_bans`)
+
+**Этап 6**: Файлы и проекты
+- `src/api/files.ts` + FileUploader
+- `src/api/projects.ts` + ProjectCard
+- `/p/:id`, `/projects/new`
+
+**Этап 7**: Друзья, уведомления, сообщения
+- `src/api/friendships.ts`, `notifications.ts`, `messages.ts`
+- `/friends`, `/notifications`, `/messages`
+- Realtime на счётчик уведомлений и диалоги
+
+**Этап 8**: Интеграция и полировка
+- Интеграция старого форума (редиректы `/forum/*` → `/c/forum/*`)
+- Скелетоны, валидация, обработка ошибок
+- Адаптив: 3 колонки → 2 → 1 + нижний таб-бар
+
+---
+
 **Дата создания памяти:** 2024
 **Версия проекта:** 2.0 (полноценная соцсеть)
-**Статус:** Готов к публикации
+**Текущий этап**: Этап 1 завершён, готов к Этапу 2
+**Статус**: Инфраструктура Supabase готова, можно применять миграции
